@@ -1,39 +1,39 @@
-# Name of App *(Give your app a short and informative title. Please adhere to our convention of Title Case without hyphens (e.g. My New App))*
+# Recent core area range and points
 
 MoveApps
 
-Github repository: *github.com/yourAccount/Name-of-App* *(the link to the repository where the code of the app can be found must be provided)*
+Github repository: (https://github.com/vee-jain/Recent_CoreArea-MoveApps)
 
 ## Description
-*Enter here the short description of the App that might also be used when filling out the description when submitting the App to Moveapps. This text is directly presented to Users that look through the list of Apps when compiling Workflows.*
+This app generates a Kernel Density Estimate (KDE) at the 50% contour (i.e., core area) at user-defined time period prior to the last date in the dataset. The app visualizes the core areas on a map along with raw tracking data, and provides a summary (per hour and day) on the frequency of points within the core area.
 
 ## Documentation
-*Enter here a detailed description of your App. What is it intended to be used for. Which steps of analyses are performed and how. Please be explicit about any detail that is important for use and understanding of the App and its outcomes.*
+For each weekly or monthly interval with more than 10 points, the KDE estimate is calculated at the 0.50 level. This app calls on the 'hr_kde' function in the 'amt' package to do so. It does not account for autocorrelation and users should be mindful of the sampling rates and outliers in their datasets. Some concepts are outlined below, however users should refer to Signer et al (2011) for more details.
+
+**Kernel Density Estimation (KDE)**: *KDE is a non-parametric way to estimate the probability density function of a continuous random variable. It is often used in spatial analysis and data visualization to estimate the distribution of points in space or time.*
+
+**Kernel Function**: *At the heart of KDE is the kernel function, typically a probability density function like the Gaussian (normal) distribution. This kernel is centered at each data point and is used to smooth the data. The shape of the kernel determines the smoothness of the estimated density.*
+
+**Calculating the Estimate**: *For each point in the dataset, the kernel is centered at that point, and its contribution is spread around that point based on the kernel shape and bandwidth. The contributions from all data points are summed to estimate the density at any given point in space or time.*
 
 ### Input data
-*Indicate which type of input data the App requires. Currently only R objects of class `MoveStack` can be used. This will be extend in the future.*
-
-*Example*: MoveStack in Movebank format
+move2 location object
 
 ### Output data
-*Indicate which type of output data the App produces to be passed on to subsequent apps. Currently only R objects of class `MoveStack` can be used. This will be extend in the future. In case the App does not pass on any data (e.g. a shiny visualization app), it can be also indicated here that no output is produced to be used in subsequent apps.*
-
-*Example:* MoveStack in Movebank format
+move2 location object (same as input)
 
 ### Artefacts
-*If the App creates artefacts (e.g. csv, pdf, jpeg, shapefiles, etc), please list them here and describe each.*
+The app creates the following artefacts:
 
-*Example:* `rest_overview.csv`: csv-file with Table of all rest site properties
+`core_time_plots.pdf`: A PDF file containing the frequency of fixes within the core area by hour and date.
+`map_core_plot.html`: HTML file for 0.50 KDE maps with the GPS fixes.
+`map_html_files.zip`: A ZIP archive containing HTML map files.
 
 ### Settings 
-*Please list and define all settings/parameters that the App requires to be set by the App user, if necessary including their unit.*
-
-*Example:* `Radius of resting site` (radius): Defined radius the animal has to stay in for a given duration of time for it to be considered resting site. Unit: `metres`.
+`Days prior`: Integer value
 
 ### Most common errors
-*Please describe shortly what most common errors of the App can be, how they occur and best ways of solving them.*
+Please create an issue on the linked GitHub should any arise.
 
 ### Null or error handling
-*Please indicate for each setting as well as the input data which behaviour the App is supposed to show in case of errors or NULL values/input. Please also add notes of possible errors that can happen if settings/parameters are improperly set and any other important information that you find the user should be aware of.*
-
-*Example:* **Setting `radius`:** If no radius AND no duration are given, the input data set is returned with a warning. If no radius is given (NULL), but a duration is defined then a default radius of 1000m = 1km is set. 
+**Setting `Days prior`:** Default is 14 days
