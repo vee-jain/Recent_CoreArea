@@ -140,6 +140,7 @@ rFunction = function(data, days_prior, ...) {
            date = as.Date(t_),
            hour = format(t_, "%H"),
            time_frame = paste(date, hour)) %>%
+      droplevels() %>%
     split(.$id) %>%
     map(~ggplot(data = .x, 
                 mapping = aes(x = hour, fill = hour)) + 
@@ -147,7 +148,7 @@ rFunction = function(data, days_prior, ...) {
           theme_minimal()+
           labs(x = "Time", y = "Number of fixes in core area") +
           theme(legend.position = "none",
-                panel.border = element_rect(color = "black", fill = NA, linewidth = 1))+
+                panel.border = element_rect(color = "black", fill = NA, linewidth = 0.5))+
           facet_grid(date~id)+ theme(strip.text.y = element_text(angle = 0)))
   
   #' Output 2: export KDE by interval
