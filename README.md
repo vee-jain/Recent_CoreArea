@@ -6,6 +6,7 @@ Github repository: (https://github.com/vee-jain/Recent_CoreArea-MoveApps)
 
 ## Description
 This app generates a Kernel Density Estimate (KDE) at the 50% contour (i.e., core area) at user-defined time period prior to the last date in the dataset. The app visualizes the core areas on a map along with raw tracking data, and provides a summary (per hour and day) on the frequency of points within the core area.
+This app replaces the deprecated 'Estimate weekly KDE ranges' App that was developed for the 'EMAC23: Equip MoveApps for Conservation'. 
 
 ## Documentation
 For each weekly or monthly interval with more than 10 points, the KDE estimate is calculated at the 0.50 level. This app calls on the 'hr_kde' function in the 'amt' package to do so. It does not account for autocorrelation and users should be mindful of the sampling rates and outliers in their datasets. Some concepts are outlined below, however users should refer to Signer et al (2011) for more details.
