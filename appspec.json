@@ -1,78 +1,116 @@
 {
-  "version": "1.1",
-  "settings": [
+     "settings": [
     {
-      "id": "sdk",
-      "name": "The name of the MoveApps SDK",
-      "description": "Showcase requesting a string input from the users of your app.",
-      "defaultValue": "MoveApps SDK",
-      "type": "STRING"
-    },
-    {
-      "id": "year",
-      "name": "The year",
-      "description": "Insert description for the year setting setting",
-      "defaultValue": 2022,
+      "id": "days_prior",
+      "name": "Days prior",
+      "description": "Please insert the number of tracking days of interest, prior to the last tracking date of the entire dataset",
+      "defaultValue": 14,
       "type": "INTEGER"
-    },
-    {
-      "id": "yourLocalFileSettingId",
-      "name": "Personalization",
-      "description": "You can personalize the dashboard by providing a file named 'sample.txt'",
-      "type": "LOCAL_FILE"
     }
   ],
   "dependencies": {
     "R": [
       {
-        "name": "lubridate"
+        "name": "amt"
       },
       {
         "name": "move2"
+      },
+      {
+        "name": "lubridate"
+      },
+      {
+        "name": "purrr"
+      },
+      {
+        "name": "dplyr"
+      },
+      {
+        "name": "ggplot2"
+      },
+      {
+        "name": "mapview"
+      },
+      {
+        "name": "RColorBrewer"
+      },
+	{
+        "name": "sf"
+      },
+      {
+        "name": "leaflet"
       }
-    ]
+	]
   },
-  "createsArtifacts": true,
-  "providedAppFiles": [
-    {
-      "settingId": "yourLocalFileSettingId",
-      "from": "data/local_app_files/provided-app-files/yourLocalFileSettingId/"
-    }
-  ],
   "license": {
     "key": "MIT"
   },
   "language": "eng",
   "keywords": [
-    "example",
-    "template"
+    "KDE",
+	"core",
+    "time"
   ],
   "people": [
     {
-      "firstName": "Charles",
+    "firstName": "Varalika",
       "middleInitials": null,
-      "lastName": "Darwin",
-      "email": "creator@example.com",
-      "roles": [
-        "author",
-        "creator"
-      ],
-      "orcid": null,
-      "affiliation": null,
+      "lastName": "Jain",
+      "email": "varalika.jain@univie.ac.at",
+      "roles": ["author", "creator"],
+      "orcid": "0000-0002-4809-9551",
+      "affiliation": "University of Vienna",
       "affiliationRor": null
     }
   ],
-  "funding": [
-    {
-      "name": "funder name",
-      "comment": "grant for App"
-    }
-  ],
   "references": [
+        {
+      "type": "IsDescribedBy",
+      "note": "Signer J., Fieberg J., Avgar T. (2011). Animal movement tools (amt): R package for managing tracking data and conducting habitat selection analyses. Ecology and Evolution, 2019 9, 880-890.",
+      "url": "https://doi.org/10.1002/ece3.4823"
+    },
     {
       "type": "IsDescribedBy",
-      "note": "Darwin, C. 1900. The creation. Journal XY. 1-2",
-      "url": "https://anylink.xyz"
+      "note": "Kranstauber B, Safi K, Scharf A (2023). _move2: Processing and Analysing Animal Trajectories_. R package version 0.2.2.",
+      "url": "https://CRAN.R-project.org/package=move2"
+    },
+        {
+      "type": "IsDescribedBy",
+      "note": "Garrett Grolemund, Hadley Wickham (2011). Dates and Times Made Easy with lubridate. Journal of Statistical Software, 40(3), 1-25.",
+      "url": "https://www.jstatsoft.org/v40/i03/"
+    },
+    {
+      "type": "IsDescribedBy",
+      "note": "  Wickham H, Henry L (2023). _purrr: Functional Programming Tools_. R package version 1.0.1",
+      "url": "https://CRAN.R-project.org/package=purrr"
+    },
+    {
+      "type": "IsDescribedBy",
+      "note": "Wickham H, François R, Henry L, Müller K, Vaughan D (2023). _dplyr: A Grammar of Data Manipulation_. R package version 1.1.2.",
+      "url": "https://CRAN.R-project.org/package=dplyr"
+    },
+    {
+      "type": "IsDescribedBy",
+      "note": "H. Wickham. ggplot2: Elegant Graphics for Data Analysis. Springer-Verlag New York, 2016.",
+      "url": "https://ggplot2.tidyverse.org"
+    },
+    {
+      "type": "IsDescribedBy",
+      "note": "Appelhans T, Detsch F, Reudenbach C, Woellauer S (2023). _mapview: Interactive Viewing of Spatial Data in R_. R package version 2.11.0.9006",
+      "url": "https://github.com/r-spatial/mapview"
+    },
+        {
+      "type": "IsDescribedBy",
+      "note": "Pebesma, E., 2018. Simple Features for R: Standardized Support for Spatial Vector Data. The R Journal 10 (1), 439-446",
+      "url": "https://doi.org/10.32614/RJ-2018-009"
+    },
+    {
+      "type": "IsDescribedBy",
+      "note": "Cheng J, Karambelkar B, Xie Y (2023). _leaflet: Create Interactive Web Maps with the JavaScript 'Leaflet' Library_. R package version 2.1.2",
+      "url": "https://CRAN.R-project.org/package=leaflet"
     }
-  ]
+  ],
+  "documentation": {
+    "url": "https://github.com/vee-jain/Recent_CoreArea-MoveApps/blob/master/README.md"
+  }
 }
