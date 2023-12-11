@@ -65,9 +65,9 @@ rFunction = function(data, days_prior, ...) {
   
   #' KDE maps
   #' Create spatial object for points 
-  plot_pts <- sf::st_as_sf(x = data_track_filtered,                         
-                           coords = c("x_", "y_"),
-                           crs = sf::st_crs(data))
+  plot_pts <- sf::st_sf(sf::st_as_sf(x = data_track_filtered,                         
+                                     coords = c("x_", "y_"),
+                                     crs = sf::st_crs(data)))
   
   #' Extract isopleths (polygons)
   kde_values <- hr %>% 
@@ -77,6 +77,7 @@ rFunction = function(data, days_prior, ...) {
   #' Add columns back
   isopleths <- unique(do.call(rbind, kde_values$isopleth))
   isopleths$id <- kde_values$id
+  isopleths <- sf::st_as_sf(isopleths)
   
   #' Set colours
   col <- brewer.pal(8, "Spectral") 
