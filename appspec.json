@@ -8,6 +8,7 @@
       "type": "INTEGER"
     }
   ],
+  "createsArtifacts": true,
   "dependencies": {
     "R": [
       {
