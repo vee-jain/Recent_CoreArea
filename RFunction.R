@@ -65,10 +65,14 @@ rFunction = function(data, days_prior, ...) {
   
   #' KDE maps
   #' Create spatial object for points 
-  plot_pts <- sf::st_sf(sf::st_as_sf(x = data_track_filtered,                         
-                                     coords = c("x_", "y_"),
-                                     crs = sf::st_crs(data)))
+  unnested_track_list <- track_list %>% 
+    unnest(info)
   
+  plot_pts <- st_as_sf(x = unnested_track_list,                         
+                       coords = c("x_", "y_"),
+                       crs = st_crs(data))
+  plot_pts$id <- as.factor(plot_pts$id)
+
   #' Extract isopleths (polygons)
   kde_values <- hr %>% 
     mutate(isopleth = map(hr_kde, possibly(hr_isopleths, otherwise = "NA"))) %>%
@@ -77,39 +81,20 @@ rFunction = function(data, days_prior, ...) {
   #' Add columns back
   isopleths <- unique(do.call(rbind, kde_values$isopleth))
   isopleths$id <- kde_values$id
-  isopleths <- sf::st_as_sf(isopleths)
+  isopleths_sf <- sf::st_as_sf(isopleths)
+  isopleths_sf$id <- as.factor(isopleths_sf$id)
   
   #' Set colours
-  col <- brewer.pal(8, "Spectral") 
-  pal <- colorNumeric(
-    palette = col,
-    domain = as.numeric(as.factor(isopleths$id)))
+  all_levels <- union(levels(isopleths_sf$id), levels(plot_pts$id))
+  nb.cols <- length(unique(all_levels))
+  mycolors <- colorRampPalette(brewer.pal(8, "Set3"))(nb.cols)
   
-  #' Core plots 
-  m1 <- leaflet() %>%
-    addTiles(group = "OSM (default)") %>%
-    addProviderTiles(providers$Esri.WorldImagery, group = "World Imagery") %>%
-    addPolygons(data = isopleths, weight = 4, 
-                color = ~pal(as.numeric(as.factor(isopleths$id))),
-                fillColor = ~pal(as.numeric(as.factor(isopleths$id))),
-                fillOpacity = 0.3,
-                opacity = 1.0,
-                popup = ~ paste0(id),
-                group = "Core area") %>%
-    addCircleMarkers(data = data_track_filtered,
-                     lng = ~x_, lat = ~y_, 
-                     radius = 5,
-                     popup = ~paste0(id," ",t_),
-                     color = "black",
-                     fillColor = ~pal(as.numeric(as.factor(data_track_filtered$id))),
-                     stroke = TRUE, fillOpacity = 1,
-                     weight = 1,
-                     group = "Indv. points") %>%
-    addLayersControl(
-      baseGroups = c("OSM (default)", "World Imagery"),
-      overlayGroups = c("Core area", "Indv. points"),
-      options = layersControlOptions(collapsed = FALSE)
-    )
+  # Plotting with mapview
+  m1 <- mapview(isopleths_sf, zcol = "id", 
+          alpha.regions = 0.5, col.regions = mycolors, layer.name = "Core areas")+
+    mapview(plot_pts, zcol = "id", col.regions = mycolors,
+            burst = TRUE,
+            alpha.regions = 0.3, layer.name = "Individual points")
   
   #' Output 1: Export maps as html
   #also exporting these plots into the temporary directory
@@ -141,16 +126,26 @@ rFunction = function(data, days_prior, ...) {
            date = as.Date(t_),
            hour = format(t_, "%H"),
            time_frame = paste(date, hour)) %>%
-      droplevels() %>%
+    droplevels() %>%
+    group_by(id, date, hour) %>% summarise(count = sum(as.numeric(location))) %>%
     split(.$id) %>%
     map(~ggplot(data = .x, 
-                mapping = aes(x = hour, fill = hour)) + 
-          geom_histogram(stat = "count")+
-          theme_minimal()+
-          labs(x = "Time", y = "Number of fixes in core area") +
+                mapping = aes(x = as.numeric(hour), y = date, fill = count )) + 
+          geom_tile()+
+          scale_fill_gradient(low = "#ffcccc", high = "red")+
+          geom_text(aes(label = count), color = "black", size = 2) +
+          theme_classic()+
+          labs(x = "Hour", y = "Date",
+               title="No. of points in core area",
+               subtitle= .$id) +
           theme(legend.position = "none",
                 panel.border = element_rect(color = "black", fill = NA, linewidth = 0.5))+
-          facet_grid(date~id)+ theme(strip.text.y = element_text(angle = 0)))
+          coord_fixed()+
+          scale_y_date(date_breaks = "1 day")+
+          scale_x_continuous(breaks = seq(0, 23, 1), labels = paste(seq(0, 23, 1), "00", sep = ":"))+
+          theme(axis.text.x = element_text(angle = 45, hjust = 1, size = 6),
+                axis.text.y = element_text(size = 6))
+    )
   
   #' Output 2: export KDE by interval
   pdf(appArtifactPath("core_time_plots.pdf"),onefile = TRUE)
