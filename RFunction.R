@@ -68,9 +68,16 @@ rFunction = function(data, days_prior, ...) {
   unnested_track_list <- track_list %>% 
     unnest(info)
   
-  plot_pts <- st_as_sf(x = unnested_track_list,                         
+  #' Convert unnested_track_list to a data frame
+  unnested_track_list_df <- as.data.frame(unnested_track_list)
+  
+  print(class(unnested_track_list_df))
+  print(str(unnested_track_list_df))
+  
+  plot_pts <- st_as_sf(x = unnested_track_list_df,                         
                        coords = c("x_", "y_"),
                        crs = st_crs(data))
+  
   plot_pts$id <- as.factor(plot_pts$id)
 
   #' Extract isopleths (polygons)
@@ -91,9 +98,10 @@ rFunction = function(data, days_prior, ...) {
   
   # Plotting with mapview
   m1 <- mapview(isopleths_sf, zcol = "id", 
-          alpha.regions = 0.5, col.regions = mycolors, layer.name = "Core areas")+
+          alpha.regions = 0.5, col.regions = mycolors,
+          burst = TRUE,
+          layer.name = "Core areas")+
     mapview(plot_pts, zcol = "id", col.regions = mycolors,
-            burst = TRUE,
             alpha.regions = 0.3, layer.name = "Individual points")
   
   #' Output 1: Export maps as html
