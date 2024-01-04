@@ -77,6 +77,7 @@ rFunction = function(data, days_prior, ...) {
   plot_pts <- st_as_sf(x = unnested_track_list_df,                         
                        coords = c("x_", "y_"),
                        crs = st_crs(data))
+  print(class(plot_pts))
   
   plot_pts$id <- as.factor(plot_pts$id)
 
@@ -86,9 +87,8 @@ rFunction = function(data, days_prior, ...) {
     filter(isopleth != "NA")
   
   #' Add columns back
-  isopleths <- unique(do.call(rbind, kde_values$isopleth))
-  isopleths$id <- kde_values$id
-  isopleths_sf <- sf::st_as_sf(isopleths)
+  isopleths_sf <- unique(do.call(rbind, kde_values$isopleth))
+  isopleths_sf$id <- kde_values$id
   isopleths_sf$id <- as.factor(isopleths_sf$id)
   
   #' Set colours
@@ -119,7 +119,7 @@ rFunction = function(data, days_prior, ...) {
   ####----Time in core area----####
   #intersecting last week core area with data points for respective individuals
   intersect_dat <- plot_pts %>% mutate(
-    intersection = as.character(st_intersects(geometry, isopleths$geometry)),
+    intersection = as.character(st_intersects(geometry, isopleths_sf$geometry)),
     intersect = as.numeric(intersection),
     location = dplyr::if_else(is.na(intersect), "0", paste0("1"))) 
   
