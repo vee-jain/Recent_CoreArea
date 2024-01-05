@@ -54,16 +54,6 @@ rFunction = function(data, days_prior, ...) {
     ) %>%
     filter(row >= 10)
   
-  #' KDE estimates
-  sf_use_s2(FALSE) 
-  
-  hr <- list()
-  hr <-  track_list %>%
-    mutate( 
-      hr_kde = (map(track_list$info, ~hr_kde(., levels = c(0.50)))), #probabilistic
-    )
-  
-  #' KDE maps
   #' Create spatial object for points 
   unnested_track_list <- track_list %>% 
     unnest(info)
@@ -80,19 +70,46 @@ rFunction = function(data, days_prior, ...) {
   print(class(plot_pts))
   
   plot_pts$id <- as.factor(plot_pts$id)
-
+  
+  #' KDE estimates
+  sf_use_s2(FALSE) 
+  
+  hr <- list()
+  hr <-  track_list %>%
+    mutate( 
+      hr_kde = (map(track_list$info, ~hr_kde(., levels = c(0.50)))), #probabilistic
+    )
+  
+  print(head(hr))
+  
   #' Extract isopleths (polygons)
   kde_values <- hr %>% 
     mutate(isopleth = map(hr_kde, possibly(hr_isopleths, otherwise = "NA"))) %>%
     filter(isopleth != "NA")
+  
+  print(head(kde_values))
   
   #' Add columns back
   isopleths_sf <- unique(do.call(rbind, kde_values$isopleth))
   isopleths_sf$id <- kde_values$id
   isopleths_sf$id <- as.factor(isopleths_sf$id)
   
+  print(head(isopleths_sf))
+  
+  #intersecting last week core area with data points for respective individuals
+  intersect_dat <- plot_pts %>% mutate(
+    intersection = as.character(st_intersects(geometry, isopleths_sf$geometry)),
+    intersect = as.numeric(intersection),
+    location = dplyr::if_else(is.na(intersect), "0", paste0("1"))) 
+  
+  intersect_df <- as.data.frame(intersect_dat)
+  print(head(intersect_df))
+  
+  sf_use_s2(TRUE) 
+  
+  #' KDE maps
   #' Set colours
-  all_levels <- union(levels(isopleths_sf$id), levels(plot_pts$id))
+  all_levels <- unique(levels(isopleths_sf$id), levels(plot_pts$id))
   nb.cols <- length(unique(all_levels))
   mycolors <- colorRampPalette(brewer.pal(8, "Set3"))(nb.cols)
   
@@ -117,14 +134,6 @@ rFunction = function(data, days_prior, ...) {
            mode = "cherry-pick")
   
   ####----Time in core area----####
-  #intersecting last week core area with data points for respective individuals
-  intersect_dat <- plot_pts %>% mutate(
-    intersection = as.character(st_intersects(geometry, isopleths_sf$geometry)),
-    intersect = as.numeric(intersection),
-    location = dplyr::if_else(is.na(intersect), "0", paste0("1"))) 
-  
-  intersect_df <- as.data.frame(intersect_dat)
-  
   in_core <- intersect_df %>% 
     filter(location == 1) %>%
     mutate(time = as.numeric(format(t_, "%H")))
