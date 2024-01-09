@@ -70,6 +70,8 @@ rFunction = function(data, days_prior, ...) {
   print(class(plot_pts))
   
   plot_pts$id <- as.factor(plot_pts$id)
+  levels(plot_pts$id)
+
   
   #' KDE estimates
   sf_use_s2(FALSE) 
@@ -77,22 +79,22 @@ rFunction = function(data, days_prior, ...) {
   hr <- list()
   hr <-  track_list %>%
     mutate( 
-      hr_kde = (map(track_list$info, ~hr_kde(., levels = c(0.50)))), #probabilistic
+      hr_kde_data = (map(track_list$info, ~amt::hr_kde(., levels = c(0.50)))), #probabilistic
     )
   
   print(head(hr))
   
   #' Extract isopleths (polygons)
   kde_values <- hr %>% 
-    mutate(isopleth = map(hr_kde, possibly(hr_isopleths, otherwise = "NA"))) %>%
-    filter(isopleth != "NA")
+    mutate(isopleth = map(hr_kde_data, amt::hr_isopleths)) %>%
+    filter(!map_lgl(isopleth, is.null))
   
   print(head(kde_values))
   
   #' Add columns back
   isopleths_sf <- unique(do.call(rbind, kde_values$isopleth))
   isopleths_sf$id <- kde_values$id
-  isopleths_sf$id <- as.factor(isopleths_sf$id)
+  isopleths_sf$id <- droplevels(as.factor(isopleths_sf$id))
   
   print(head(isopleths_sf))
   
