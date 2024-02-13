@@ -38,6 +38,9 @@
 	{
         "name": "sf"
       },
+	{
+        "name": "s2"
+      },
       {
         "name": "leaflet"
       }
