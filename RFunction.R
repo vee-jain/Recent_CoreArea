@@ -168,7 +168,6 @@ rFunction = function(data, days_prior, ...) {
   
   ####----Output 2: Time in core area----####
   in_core <- combined_df_final %>% 
-    filter(location == 1) %>%
     mutate(time = as.numeric(format(t_, "%H")))
   
   time_in_core <- in_core %>%
@@ -182,8 +181,8 @@ rFunction = function(data, days_prior, ...) {
     map(~ggplot(data = .x, 
                 mapping = aes(x = as.numeric(hour), y = date, fill = count )) + 
           geom_tile()+
-          scale_fill_gradient(low = "#ffcccc", high = "red")+
-          geom_text(aes(label = count), color = "black", size = 2) +
+          scale_fill_gradient(low = "white", high = "red")+
+          geom_text(aes(label = count), color = "black", size = 1.5) +
           theme_classic()+
           labs(x = "Hour", y = "Date",
                title="No. of points in core area",
