@@ -2,6 +2,8 @@ library('amt')
 library('move2')
 library('lubridate')
 library('sf')
+library('s2')
+library('dplyr')
 library('RColorBrewer')
 library('leaflet')
 library('purrr')
@@ -61,17 +63,12 @@ rFunction = function(data, days_prior, ...) {
   #' Convert unnested_track_list to a data frame
   unnested_track_list_df <- as.data.frame(unnested_track_list)
   
-  print(class(unnested_track_list_df))
-  print(str(unnested_track_list_df))
-  
   plot_pts <- st_as_sf(x = unnested_track_list_df,                         
                        coords = c("x_", "y_"),
                        crs = st_crs(data))
-  print(class(plot_pts))
   
   plot_pts$id <- as.factor(plot_pts$id)
   levels(plot_pts$id)
-
   
   #' KDE estimates
   sf_use_s2(FALSE) 
@@ -79,49 +76,83 @@ rFunction = function(data, days_prior, ...) {
   hr <- list()
   hr <-  track_list %>%
     mutate( 
-      hr_kde_data = (map(track_list$info, ~amt::hr_kde(., levels = c(0.50)))), #probabilistic
+      hr_kde = (map(track_list$info, ~hr_kde(., levels = c(0.50)))), #probabilistic
     )
-  
-  print(head(hr))
   
   #' Extract isopleths (polygons)
   kde_values <- hr %>% 
-    mutate(isopleth = map(hr_kde_data, amt::hr_isopleths)) %>%
-    filter(!map_lgl(isopleth, is.null))
-  
-  print(head(kde_values))
+    mutate(isopleth = map(hr_kde, hr_isopleths)) %>%
+    filter(isopleth != "NA")
   
   #' Add columns back
-  isopleths_sf <- unique(do.call(rbind, kde_values$isopleth))
-  isopleths_sf$id <- kde_values$id
-  isopleths_sf$id <- droplevels(as.factor(isopleths_sf$id))
-  
-  print(head(isopleths_sf))
-  
-  #intersecting last week core area with data points for respective individuals
-  intersect_dat <- plot_pts %>% mutate(
-    intersection = as.character(st_intersects(geometry, isopleths_sf$geometry)),
-    intersect = as.numeric(intersection),
-    location = dplyr::if_else(is.na(intersect), "0", paste0("1"))) 
-  
-  intersect_df <- as.data.frame(intersect_dat)
-  print(head(intersect_df))
+  isopleths <- unique(do.call(rbind, kde_values$isopleth))
+  isopleths$id <- kde_values$id
   
   sf_use_s2(TRUE) 
   
-  #' KDE maps
-  #' Set colours
-  all_levels <- unique(levels(isopleths_sf$id), levels(plot_pts$id))
-  nb.cols <- length(unique(all_levels))
-  mycolors <- colorRampPalette(brewer.pal(8, "Set3"))(nb.cols)
+  ####----Intersecting points with core area----####
+  #intersecting last week core area with data points for respective individuals
+  plot_pts$geometry_s2_pts <- st_as_s2(plot_pts$geometry)
+  isopleths$geometry_s2_iso <- st_as_s2(st_make_valid(isopleths$geometry))
+
+  #' points by individual
+  indv_pts <- plot_pts %>% group_by(id) %>% nest()
   
-  # Plotting with mapview
-  m1 <- mapview(isopleths_sf, zcol = "id", 
-          alpha.regions = 0.5, col.regions = mycolors,
-          burst = TRUE,
-          layer.name = "Core areas")+
-    mapview(plot_pts, zcol = "id", col.regions = mycolors,
-            alpha.regions = 0.3, layer.name = "Individual points")
+  #' creating list structure for storing data
+  intersect_dat <- indv_pts
+  
+  # Define a function to perform the intersection for a pair of data frame and geometry
+  process_intersection <- function(data_df, geometry) {
+    # Assuming 'geometry_s2_pts' is the column name in 'data_df'
+    intersections <- s2_intersects(data_df$geometry_s2_pts, geometry)
+    # Add the result as a new column
+    data_df$intersection <- (intersections)
+    return(data_df)
+  }
+  
+  # Use nested map2 to iterate over both lists
+  intersect_dat <- map2(indv_pts$data, isopleths$geometry_s2_iso, process_intersection)
+  intersect_dat <- setNames(intersect_dat, indv_pts$id)
+  
+  combined_df <- dplyr::bind_rows(intersect_dat, .id = "id")
+  
+  #' if a point intersects, it gets 0, else 1 
+  combined_df_final <- combined_df %>%
+    mutate(location = ifelse(intersection == 'FALSE', 0, 1))
+  combined_df_final <- as.data.frame(combined_df_final)
+
+  ####----Output 1: HTML map----####
+  #' Set colours
+  col <- brewer.pal(8, "Spectral") 
+  pal <- colorNumeric(
+    palette = col,
+    domain = as.numeric(as.factor(isopleths$id)))
+  
+  #' Core plots 
+  m1 <- leaflet() %>%
+    addTiles(group = "OSM (default)") %>%
+    addProviderTiles(providers$Esri.WorldImagery, group = "World Imagery") %>%
+    addPolygons(data = isopleths, weight = 4, 
+                color = ~pal(as.numeric(as.factor(isopleths$id))),
+                fillColor = ~pal(as.numeric(as.factor(isopleths$id))),
+                fillOpacity = 0.3,
+                opacity = 1.0,
+                popup = ~ paste0(id),
+                group = "Core area") %>%
+    addCircleMarkers(data = data_track_filtered,
+                     lng = ~x_, lat = ~y_, 
+                     radius = 5,
+                     popup = ~paste0(id," ",t_),
+                     color = "black",
+                     fillColor = ~pal(as.numeric(as.factor(data_track_filtered$id))),
+                     stroke = TRUE, fillOpacity = 1,
+                     weight = 1,
+                     group = "Indv. points") %>%
+    addLayersControl(
+      baseGroups = c("OSM (default)", "World Imagery"),
+      overlayGroups = c("Core area", "Indv. points"),
+      options = layersControlOptions(collapsed = FALSE)
+    )
   
   #' Output 1: Export maps as html
   #also exporting these plots into the temporary directory
@@ -135,8 +166,8 @@ rFunction = function(data, days_prior, ...) {
                               pattern="^map.*html"),
            mode = "cherry-pick")
   
-  ####----Time in core area----####
-  in_core <- intersect_df %>% 
+  ####----Output 2: Time in core area----####
+  in_core <- combined_df_final %>% 
     filter(location == 1) %>%
     mutate(time = as.numeric(format(t_, "%H")))
   
