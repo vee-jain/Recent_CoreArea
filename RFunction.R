@@ -11,6 +11,7 @@ library('ggplot2')
 library('mapview')
 library('webshot')
 library('lwgeom')
+library('utils')
 
 ## The parameter "data" is reserved for the data object passed on from the previous app
 
