@@ -49,6 +49,12 @@
       },
       {
         "name": "lwgeom"
+      },
+	{
+        "name": "utils"
+      },
+	{
+        "name": "zip"
       }
 	]
   },
