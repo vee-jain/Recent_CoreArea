@@ -1,5 +1,3 @@
-#this test is internal only to check if the move1-move2 double read-in works
-
 library('move2')
 
 source("../../src/io/rds.R")

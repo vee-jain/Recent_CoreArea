@@ -1,5 +1,10 @@
 # Changelog SDK
 
+## 2024-03 `v3.2.0`
+
+- introduce app-setting-type `USER_FILE`
+- deprecate app-setting-type `LOCAL_FILE`
+
 ## 2024-02 `v3.1.0`
 
 - introduce `appspec.json` version `1.2`
@@ -28,7 +33,6 @@
 
 - provide new `move2` input files
 - minor fixes in src/io files
-
 
 ## 2023-06 `v3.0.0`
 
